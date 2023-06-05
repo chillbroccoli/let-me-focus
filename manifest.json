@@ -1,0 +1,15 @@
+{
+  "manifest_version": 3,
+  "name": "Let Me Focus",
+  "description": "Block sites that don't allow you to focus on important things.",
+  "version": "1.0.0",
+  "action": { "default_popup": "index.html", "default_icon": "icon.png" },
+  "icons": {
+    "128": "icon.png"
+  },
+  "permissions": ["activeTab", "tabs", "storage"],
+  "background": {
+    "service_worker": "src/background.ts",
+    "type": "module"
+  }
+}
