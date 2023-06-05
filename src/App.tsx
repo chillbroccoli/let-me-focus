@@ -3,8 +3,9 @@ import "./App.css";
 
 function App() {
   const [currentTab, setCurrentTab] = useState<chrome.tabs.Tab>();
-  const [rootUrl, setRootUrl] = useState("");
   const [blocklist, setBlocklist] = useState<string[]>([]);
+
+  const rootUrl = currentTab?.url ? new URL(currentTab.url).hostname : "";
 
   const getStorageItems = async () => {
     const items = await chrome.storage.sync.get("let-me-focus.blocklist");
@@ -24,26 +25,39 @@ function App() {
         currentWindow: true,
       });
       if (!currentTab.url) return;
-      const url = new URL(currentTab.url);
-      setRootUrl(url.hostname);
       setCurrentTab(currentTab);
     };
 
     getCurrentTabInfo();
-
     getStorageItems();
   }, []);
 
+  const reloadPage = async () => {
+    await chrome.tabs.update({
+      active: true,
+      url: currentTab?.url,
+    });
+  };
+
   const addToBlockList = () => {
     if (!blocklist.includes(rootUrl)) {
-      setBlocklist([...blocklist, rootUrl]);
-      saveStorageItems([...blocklist, rootUrl]);
+      const next = [...blocklist, rootUrl];
+      setBlocklist(next);
+      saveStorageItems(next);
+      reloadPage();
     }
+  };
+
+  const removeFromBlocklist = (item: string) => {
+    const updatedBlocklist = blocklist.filter((i) => i !== item);
+
+    setBlocklist(updatedBlocklist);
+    saveStorageItems(updatedBlocklist);
   };
 
   const protocol = currentTab?.url ? new URL(currentTab.url).protocol : null;
   const isValidUrl = protocol === "https:" || protocol === "http:";
-  console.log("PROTOCOL", protocol);
+  const isAlreadyAdded = blocklist.includes(rootUrl);
 
   return (
     <div className="container">
@@ -52,6 +66,12 @@ function App() {
           ? blocklist.map((item) => (
               <li key={item} className="list-item">
                 {item}
+                <button
+                  className="times"
+                  onClick={() => removeFromBlocklist(item)}
+                >
+                  &times;
+                </button>
               </li>
             ))
           : null}
@@ -59,9 +79,11 @@ function App() {
       <button
         className="blockBtn"
         onClick={addToBlockList}
-        disabled={!isValidUrl}
+        disabled={!isValidUrl || isAlreadyAdded}
       >
-        {isValidUrl ? "Block This Site" : "Cannot Block This Site"}
+        {isValidUrl && !isAlreadyAdded
+          ? "Block This Site"
+          : "Cannot Block This Site"}
       </button>
     </div>
   );
