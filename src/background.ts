@@ -4,18 +4,17 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     const parsedItems: string[] = JSON.parse(
       items["let-me-focus.blocklist"] ?? "[]"
     );
-    const url = new URL(tab.url as string);
-    url.searchParams.set("site", url.hostname);
+    const url = new URL(tab.url);
 
     if (parsedItems.includes(url.hostname)) {
       const blockedSite = parsedItems.find((item) => item === url.hostname);
       if (!blockedSite) return;
       const publicHtmlUrl = chrome.runtime.getURL("blocked.html");
-      const newUrl = new URL(publicHtmlUrl);
-      newUrl.searchParams.set("site", blockedSite);
+      const redirectUrl = new URL(publicHtmlUrl);
+      redirectUrl.searchParams.set("site", blockedSite);
       await chrome.tabs.update({
         active: true,
-        url: newUrl.href,
+        url: redirectUrl.href,
       });
     }
   }
