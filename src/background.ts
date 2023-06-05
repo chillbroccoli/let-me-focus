@@ -1,4 +1,4 @@
-chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener(async (_, __, tab) => {
   if (tab?.url) {
     const items = await chrome.storage.sync.get("let-me-focus.blocklist");
     const parsedItems: string[] = JSON.parse(
